@@ -1,24 +1,31 @@
 import torch
+import metrics
+import numpy as np
+import torch.nn.functional as F
 from tqdm import tqdm
+from pprint import pprint
 
 
-def train(model, optimizer, p, train_loader, val_loader, test_loader):
+def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
 
     ### Train model 
-    for epoch_idx in tqdm(range(p.n_epochs)):
+    for epoch_idx in tqdm(range(p.n_epochs), desc="Training"):
 
         # Loop through training data
         epoch_loss = 0.0
         model.train()
-        for img, labels in train_loader:
+        for img, labels in tqdm(train_loader, desc="Epoch"):
+
+            # # Change datatype and rescale 
+            img = img.type(torch.float32) / 255.0
             
-            img = img.to(p.device) 
-            labels = labels.to(p.device)
+            img = img.to(p.device) # [N,C,H,W] 
+            labels = labels.to(p.device, dtype=torch.float32) / 255.0 # [N,1,H,W]
 
             optimizer.zero_grad()
 
-            output = model(img) 
-            loss = p.loss_fn(output, labels)
+            output_logits = model(img) # [N,1,H,W]
+            loss = loss_fn(output_logits, labels)
             loss.backward()
             optimizer.step()
 
@@ -27,23 +34,48 @@ def train(model, optimizer, p, train_loader, val_loader, test_loader):
         print(f"Epoch {1+epoch_idx} loss = {epoch_loss:.4f}")
 
         # Validation
-        model.eval()
+        print("Performing validation")
         val_metrics = test(model, p, val_loader)
+        pprint(val_metrics)
+    
+    
+    # Test set evaluation
+    test_metrics = test(model, p, test_loader)
+    print("Training finished")
+    pprint(test_metrics)
+
+    return
 
 
-def test(model, p, data_loader):
+def test(model, p, data_loader, threshold=None):
+    _threshold = p.threshold if (threshold is None) else threshold
+    confusion_matrix = torch.zeros((2,2))
     model.eval()
-    n_correct_predictions = 0.0
     with torch.no_grad():
         for img, labels in data_loader:
 
+            img = img.type(torch.float32) / 255.0
+
             img, labels = img.to(p.device), labels.to(p.device)
-            output_probability = model(img) # (N,10)
+            output_logits = model(img) # [N,1,H,W]
+            probability_map = F.sigmoid(output_logits)
+            binary_map = (probability_map >= _threshold).type(torch.uint8)
 
-            predicted_batch_class = torch.argmax(output_probability, dim=-1) # (N,) class 0-9
+            cm = metrics.confusion_matrix(binary_map, labels)
+            confusion_matrix += cm
 
-            n_correct_predictions += (predicted_batch_class == labels).sum().cpu().item()
+    return metrics.calculate_metrics(confusion_matrix)
 
-    accuracy = n_correct_predictions / len(test_data)
-    print(f"Test accuracy = {accuracy*100:.2f}%")
-    pass
+
+def tune_threshold(N, lower, upper, model, p, data_loader):
+
+    thresholds = np.linspace(lower,upper,N)
+    scores = np.zeros(N)
+
+    for idx,theta in enumerate(thresholds):
+        test_score = test(model, p, data_loader, threshold=theta)
+        scores[idx] = test_score[p.optim_metric].item()
+    
+    print(f"Scores {scores}")
+    
+    return thresholds[np.argmax(scores)]
