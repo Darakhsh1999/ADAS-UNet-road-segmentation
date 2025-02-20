@@ -67,6 +67,9 @@ class RoadData(Dataset):
 
 
 class RoadDataLazyLoad(Dataset):
+    # https://github.com/RaivoKoot/Video-Dataset-Loading-Pytorch
+    # https://github.com/mahdip72/VideoDataloader
+    # https://www.youtube.com/watch?v=GAmcBH1e6b0
     pass
 
 if __name__ == "__main__":
