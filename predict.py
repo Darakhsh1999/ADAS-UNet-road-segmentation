@@ -43,7 +43,7 @@ def predict(model_path, source_path, threshold=0.3, FPS=30, use_camera=False):
             binary_mask_stack = np.moveaxis(binary_mask_stack,0,-1)
             binary_mask_stack[:,:,1:3] = 0
 
-            combined_frame = cv2.addWeighted(frame,1.0,binary_mask_stack,0.4,0)
+            combined_frame = cv2.addWeighted(frame,1.0,binary_mask_stack,0.5,0)
             cv2.imshow("root", combined_frame)
         
 
