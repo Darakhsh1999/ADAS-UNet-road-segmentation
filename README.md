@@ -12,5 +12,4 @@ The model shows promising results and can in general differentiate between road 
 
 Below is a recording shown of the model performing live inference on a video source and overlaying its binary road segmentation.
 
-![gif](link_to_file.gif)
-<video src='dataset\example_video.mp4' width=180/>
+![Image](https://github.com/user-attachments/assets/a024c4b7-114e-40fe-9e1e-6035dd231288)
