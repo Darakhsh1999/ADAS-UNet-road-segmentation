@@ -2,7 +2,7 @@
 
 ## U-Net model that performs binary segmentation of roads
 
-The dataset is annotated using my custom [Road Segmentation Tool (RST)](https://github.com/Darakhsh1999/Road-Segmentation-Tool) where contours constructed through continously connected lines and splines are interpolated as a function of time. The original size of the images are (720,1280) however the DataLoader downscales the images to (512,512) that are then passed through the U-Net.
+The dataset is annotated using my custom [Road Segmentation Tool (RST)](https://github.com/Darakhsh1999/Road-Segmentation-Tool) where contours constructed through continously connected lines and splines are interpolated as a function of time. The original size of the images are (720,1280) however the DataLoader downscales the images to (512,512) that are then passed through the U-Net. The model can also perform live inference using the output of a dashcam mounted on the front of a car by passing in the parameter <code>camera=True</code> in the <code>predict.py</code> module.
 
 ---
 
