@@ -8,8 +8,17 @@ The dataset is annotated using my custom [Road Segmentation Tool (RST)](https://
 
 The model shows promising results and can in general differentiate between road and background pixels, however, due to the I/O bottleneck and low RAM caused by the dataset and limitation in hardware, I was not able to push for higher performance. Ideally one would require a significant increase in dataset size and a larger compute cluster to feasible be able to train a high-performing model. Despite this, my local model could achieve a validation intersection-over-union score of $IOU \approx 0.9$ .
 
+## **Data sample example**
+
+Visual example of a some data samples
+
+![Imagee1](https://github.com/user-attachments/assets/3de4e8bf-15ab-492d-8a5b-d52e0d2c979e)
+
+![Imagee2](https://github.com/user-attachments/assets/907afe8a-ee7d-4cb1-a819-4d669ce762ab)
+
+
 ## **Example**
 
-Below is a recording shown of the model performing live inference on a video source and overlaying its binary road segmentation.
+Below is a recording shown of the model performing realtime inference on a video source and overlaying its binary road segmentation.
 
 ![Image](https://github.com/user-attachments/assets/a024c4b7-114e-40fe-9e1e-6035dd231288)
