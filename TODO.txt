@@ -1,2 +1,0 @@
-- 2nd data class
-- TensorRT optimization

@@ -75,5 +75,6 @@ class RoadDataLazyLoad(Dataset):
 if __name__ == "__main__":
 
     transform = Resize((512,512), interpolation=InterpolationMode.NEAREST_EXACT)
+    transform = None
     data = RoadData(end_pts=50, transform=transform)
-    data.plot_example(4)
+    data.plot_example(10)
