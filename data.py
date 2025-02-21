@@ -62,9 +62,6 @@ class RoadData(Dataset):
             axs[1].set_title("Mask")
             plt.show()
     
-    def density_based_weighting(self):
-        pass
-
 
 class RoadDataLazyLoad(Dataset):
     # https://github.com/RaivoKoot/Video-Dataset-Loading-Pytorch

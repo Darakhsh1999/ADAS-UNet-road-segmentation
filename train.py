@@ -7,6 +7,8 @@ from pprint import pprint
 
 
 def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
+    
+    early_stop = False
 
     ### Train model 
     for epoch_idx in tqdm(range(p.n_epochs), desc="Training"):
@@ -37,6 +39,15 @@ def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
         print("Performing validation")
         val_metrics = test(model, p, val_loader)
         pprint(val_metrics)
+
+        # Check early stoppage
+        if p.stopping_criterion(model, val_metrics[p.optim_metric]):
+            early_stop = True
+            break
+    
+    # Load in best model if training finished
+    if not early_stop:
+        p.stopping_criterion.load_best_model(model)
     
     
     # Test set evaluation

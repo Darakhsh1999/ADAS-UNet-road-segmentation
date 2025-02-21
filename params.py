@@ -1,20 +1,22 @@
 import os
 import numpy as np
 import torch
+import early_stopping
 
 class Params:
 
-    batch_size = 4
+    batch_size = 6
     threshold = 0.2
     lr = 0.001
-    n_epochs = 5
+    n_epochs = 40
     device = torch.device("cuda" if torch.cuda.is_available else "cpu")
     save_path = os.path.join("models",f"unet{np.random.randint(0,1024)}.pt")
     optim_metric = "iou"
+    stopping_criterion = early_stopping.EarlyStopping(patience=10)
 
     # Threshold tuning
     lower = 0.001
-    upper = 0.3
+    upper = 0.9
     delta_tune = 0.2
     n_tune = 20
     
