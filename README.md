@@ -10,7 +10,7 @@ The model shows promising results and can in general differentiate between road 
 
 ## **Data sample example**
 
-Visual example of a single data sample 
+Visual example of a some data samples
 
 ![Imagee1](https://github.com/user-attachments/assets/3de4e8bf-15ab-492d-8a5b-d52e0d2c979e)
 
