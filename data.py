@@ -7,6 +7,9 @@ from torchvision.io import read_video
 from torchvision.transforms import Resize, InterpolationMode
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
 
+# TEMP
+import torchvision.io as pyio
+
 class RoadData(Dataset):
 
     def __init__(self, end_pts=50, transform=None, verbose=False):
@@ -64,14 +67,46 @@ class RoadData(Dataset):
     
 
 class RoadDataLazyLoad(Dataset):
-    # https://github.com/RaivoKoot/Video-Dataset-Loading-Pytorch
-    # https://github.com/mahdip72/VideoDataloader
-    # https://www.youtube.com/watch?v=GAmcBH1e6b0
-    pass
+    # https://pytorch.org/vision/stable/auto_examples/others/plot_video_api.html#sphx-glr-auto-examples-others-plot-video-api-py
+    # https://pytorch.org/vision/stable/generated/torchvision.io.VideoReader.html#torchvision.io.VideoReader
+
+    def __init__(self, transform=None):
+        self.video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
+        self.binary_video_path = os.path.join("dataset","labeled_video7465.avi")
+        self.transform = transform
+
+        a = pyio.read_file(self.video_path)
+        print(a)
+
+
+
+        self.n_frames = len(self.mask)
+
+    def __getitem__(self, idx):
+
+        # Load in video frame
+        
+        if self.transform:
+            img, mask = sample
+            sample = (self.transform(img), (255*(self.transform(mask) > 200).type(torch.uint8)))
+        return sample
+
+    def __len__(self):
+        return self.n_frames
+
+    
 
 if __name__ == "__main__":
 
-    transform = Resize((512,512), interpolation=InterpolationMode.NEAREST_EXACT)
-    transform = None
-    data = RoadData(end_pts=50, transform=transform)
-    data.plot_example(10)
+    #transform = Resize((512,512), interpolation=InterpolationMode.NEAREST_EXACT)
+    #transform = None
+    #data = RoadData(end_pts=50, transform=transform)
+    #data.plot_example(10)
+
+    video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
+    binary_video_path = os.path.join("dataset","labeled_video7465.avi")
+
+
+    a = pyio.read_video_timestamps(binary_video_path, pts_unit="sec")
+    print(a)
+    print(len(a))

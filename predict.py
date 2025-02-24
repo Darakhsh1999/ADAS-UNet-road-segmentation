@@ -55,4 +55,4 @@ if __name__ == "__main__":
 
     model_path = os.path.join("models","unet996.pt")
     source_path = os.path.join("dataset","ScenicDrive_trim.mp4")
-    predict(model_path, source_path, threshold=0.1)
+    predict(model_path, source_path, threshold=0.2)
