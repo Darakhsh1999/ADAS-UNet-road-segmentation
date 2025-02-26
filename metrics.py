@@ -1,5 +1,31 @@
 import torch
 
+def test_metrics():
+    N = 100
+    A = torch.zeros((N,N))
+    B = torch.zeros((N,N))
+
+    A[0:N//2,0:N//2] = 1
+    B[0:N//2,0:N//2] = 1
+
+    cm = confusion_matrix(A,B)
+    ddict = calculate_metrics(cm)
+    print(ddict)
+
+    A = torch.ones((N,N))
+    B = torch.zeros((N,N))
+
+    cm = confusion_matrix(A,B)
+    ddict = calculate_metrics(cm)
+    print(ddict)
+
+    A = torch.randint(0,2,(N,N))
+    B = torch.randint(0,2,(N,N))
+
+    cm = confusion_matrix(A,B)
+    ddict = calculate_metrics(cm)
+    print(ddict)
+
 def IOU(pred:torch.Tensor, gt:torch.Tensor) -> float:
     intersection = torch.bitwise_and(pred,gt)
     union = torch.bitwise_or(pred,gt)
@@ -27,10 +53,4 @@ def calculate_metrics(cm) -> dict:
 
 if __name__ == "__main__":
     
-    N = 100
-    A = torch.randint(0,2,(N,N))
-    B = torch.randint(0,2,(N,N))
-
-    cm = confusion_matrix(A,B)
-    ddict = calculate_metrics(cm)
-    print(ddict)
+    test_metrics()
