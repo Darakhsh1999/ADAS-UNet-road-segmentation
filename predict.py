@@ -10,7 +10,7 @@ from torchvision.transforms import Resize, InterpolationMode
 def predict(model_path, source_path, threshold=0.3, FPS=30, use_camera=False):
 
     # Load in model
-    device = "cuda" if torch.cuda.is_available else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model = load_model(model_path)
     model.to(device)
 
