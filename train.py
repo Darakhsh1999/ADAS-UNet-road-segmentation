@@ -18,10 +18,8 @@ def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
         model.train()
         for img, labels in tqdm(train_loader, desc="Epoch"):
 
-            # # Change datatype and rescale 
-            img = img.type(torch.float32) / 255.0
-            
-            img = img.to(p.device) # [N,C,H,W] 
+            # Change device, datatype and rescale 
+            img = img.to(p.device, dtype=torch.float32) / 255.0 # [N,C,H,W]
             labels = labels.to(p.device, dtype=torch.float32) / 255.0 # [N,1,H,W]
 
             optimizer.zero_grad()
@@ -65,12 +63,12 @@ def test(model, p, data_loader, threshold=None):
     with torch.no_grad():
         for img, labels in data_loader:
 
-            img = img.type(torch.float32) / 255.0
+            img = img.to(p.device, dtype=torch.float32) / 255.0 # [N,C,H,W] float32
+            labels = labels.to(p.device) # [N,1,H,W] uint8
 
-            img, labels = img.to(p.device), labels.to(p.device)
             output_logits = model(img) # [N,1,H,W]
             probability_map = F.sigmoid(output_logits)
-            binary_map = (probability_map >= _threshold).type(torch.uint8)
+            binary_map = 255*(probability_map >= _threshold).type(torch.uint8)
 
             cm = metrics.confusion_matrix(binary_map, labels)
             confusion_matrix += cm
