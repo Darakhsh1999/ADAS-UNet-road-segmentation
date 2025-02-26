@@ -1,14 +1,22 @@
 import os
+import cv2
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from torch.utils.data import Dataset
-from torchvision.io import read_video
+from torch.utils.data import Dataset, DataLoader, Subset
+from torchvision.io import read_video, read_video_timestamps
 from torchvision.transforms import Resize, InterpolationMode
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
 
-# TEMP
-import torchvision.io as pyio
+import warnings
+warnings.filterwarnings('ignore', module='torchvision')
+
+
+def get_video_frame_count(video_path):
+    cap = cv2.VideoCapture(video_path)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+    return total_frames
 
 class RoadData(Dataset):
 
@@ -66,47 +74,85 @@ class RoadData(Dataset):
             plt.show()
     
 
-class RoadDataLazyLoad(Dataset):
-    # https://pytorch.org/vision/stable/auto_examples/others/plot_video_api.html#sphx-glr-auto-examples-others-plot-video-api-py
-    # https://pytorch.org/vision/stable/generated/torchvision.io.VideoReader.html#torchvision.io.VideoReader
+class RoadDataRuntimeLoad(Dataset):
 
-    def __init__(self, transform=None):
+    def __init__(self, transform=None, verbose=0):
         self.video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
         self.binary_video_path = os.path.join("dataset","labeled_video7465.avi")
         self.transform = transform
+        self.verbose = verbose
 
-        a = pyio.read_file(self.video_path)
-        print(a)
+        self.video_timestamps = read_video_timestamps(self.video_path)[0]
+        self.mask_timestamps = read_video_timestamps(self.binary_video_path)[0]
+        if self.verbose > 0:
+            print(f"n_frames_video = {len(self.video_timestamps)}")
+            print(f"n_frames_mask = {len(self.mask_timestamps)}")
 
 
+        # Cropping frames
+        _minlen = min(len(self.video_timestamps), len(self.mask_timestamps))
+        self.video_timestamps = self.video_timestamps[:_minlen]
+        self.mask_timestamps = self.mask_timestamps[:_minlen]
+        assert len(self.video_timestamps) == len(self.mask_timestamps), f"N_frames_video = {len(self.video_timestamps)}, N_frames_mask = {len(self.mask_timestamps)}"
+        self.n_frames = len(self.video_timestamps)
 
-        self.n_frames = len(self.mask)
 
     def __getitem__(self, idx):
+        video_idx = self.video_timestamps[idx]
+        mask_idx = self.mask_timestamps[idx]
+        video_frame = read_video(self.video_path, start_pts=video_idx, end_pts=video_idx, output_format="TCHW")[0][0] # [C,H,W]
+        mask_frame = read_video(self.binary_video_path, start_pts=mask_idx, end_pts=mask_idx, output_format="TCHW")[0][0,[0],:,:] # [1,H,W]
 
-        # Load in video frame
-        
         if self.transform:
-            img, mask = sample
-            sample = (self.transform(img), (255*(self.transform(mask) > 200).type(torch.uint8)))
-        return sample
+            return (self.transform(video_frame), (255*(self.transform(mask_frame) > 100).type(torch.uint8)))
+        return (video_frame, mask_frame) # [C,H,W]
 
     def __len__(self):
         return self.n_frames
+
+    def get_data_pair(self, n=5):
+        
+        sample_idx = np.random.choice(self.n_frames, n, replace=False)
+        sample_list = []
+        for idx in sample_idx:
+            sample_list.append(self.__getitem__(idx))
+        return sample_list
+    
+    def plot_example(self, n=3, plot_type="subplot"):
+        sample_list = self.get_data_pair(n=n)
+
+        for frame, mask in sample_list:
+            frame = np.moveaxis(frame.numpy().squeeze(),0,-1) # [H,W,C]
+            mask = mask.numpy().squeeze() # [H,W]
+            if plot_type == "subplot":
+
+                    # Plotting
+                    fig, axs = plt.subplots(1, 2)
+                    axs[0].imshow(frame)
+                    axs[0].set_title("Image")
+                    axs[1].imshow(mask, cmap="gray")
+                    axs[1].set_title("Mask")
+                    plt.show()
+            elif plot_type == "overlay":
+                    stacked_mask = np.stack((mask,mask,mask), axis=-1)
+                    stacked_mask[:,:,0:2] = 0
+                    combined_frame = cv2.addWeighted(frame,1.0,stacked_mask,0.3,0)
+                    plt.imshow(combined_frame)
+                    plt.show()
+            else:
+                ValueError(f"Unknown plot type: {plot_type}")
+
 
     
 
 if __name__ == "__main__":
 
-    #transform = Resize((512,512), interpolation=InterpolationMode.NEAREST_EXACT)
-    #transform = None
-    #data = RoadData(end_pts=50, transform=transform)
-    #data.plot_example(10)
+    transform = Resize((512,512), interpolation=InterpolationMode.NEAREST_EXACT)
+    data = RoadDataRuntimeLoad(transform=transform)
 
-    video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
-    binary_video_path = os.path.join("dataset","labeled_video7465.avi")
+    train_data = Subset(data, range(0,int(0.5*len(data))))
+    val_data = Subset(data, range(int(0.5*len(data)),len(data)))
 
+    train_data.dataset.plot_example(n=10, plot_type="overlay")
+    val_data.dataset.plot_example(n=10, plot_type="subplot")
 
-    a = pyio.read_video_timestamps(binary_video_path, pts_unit="sec")
-    print(a)
-    print(len(a))
