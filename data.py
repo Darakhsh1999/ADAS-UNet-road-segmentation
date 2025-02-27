@@ -22,7 +22,7 @@ class RoadData(Dataset):
 
     def __init__(self, end_pts=50, transform=None, verbose=False):
         self.video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
-        self.binary_video_path = os.path.join("dataset","labeled_video7465.avi")
+        self.binary_video_path = os.path.join("dataset","labeled_video1578.avi")
         self.transform = transform
         self.verbose = verbose
 
@@ -78,7 +78,7 @@ class RoadDataRuntimeLoad(Dataset):
 
     def __init__(self, transform=None, verbose=0):
         self.video_path = os.path.join("dataset","ScenicDrive_trim.mp4")
-        self.binary_video_path = os.path.join("dataset","labeled_video7465.avi")
+        self.binary_video_path = os.path.join("dataset","labeled_video1578.avi")
         self.transform = transform
         self.verbose = verbose
 
@@ -96,6 +96,9 @@ class RoadDataRuntimeLoad(Dataset):
         assert len(self.video_timestamps) == len(self.mask_timestamps), f"N_frames_video = {len(self.video_timestamps)}, N_frames_mask = {len(self.mask_timestamps)}"
         self.n_frames = len(self.video_timestamps)
 
+        # Estimate pos_weight
+        self.estimate_pos_weight()
+
 
     def __getitem__(self, idx):
         video_idx = self.video_timestamps[idx]
@@ -109,6 +112,13 @@ class RoadDataRuntimeLoad(Dataset):
 
     def __len__(self):
         return self.n_frames
+
+    def estimate_pos_weight(self):
+        _mask = read_video(self.binary_video_path, end_pts=self.mask_timestamps[int(0.1*len(self.mask_timestamps))])[0] # [T,H,W,C]
+        _mask = _mask[:,:,:,0] # [T,H,W]
+        assert _mask.ndim == 3, f"mask has shape: {_mask.shape}"
+        n_positive = torch.count_nonzero(_mask)
+        self.pos_weight = (_mask.nelement() - n_positive) / n_positive # pos_weight = negative/positive
 
     def get_data_pair(self, n=5):
         
