@@ -30,8 +30,8 @@ def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
             optimizer.step()
 
             epoch_loss += loss.item()
-        epoch_loss /= len(train_loader.dataset)
-        print(f"Epoch {1+epoch_idx} loss = {epoch_loss:.4f}")
+        #epoch_loss /= len(train_loader.dataset)
+        print(f"Epoch {1+epoch_idx} loss = {epoch_loss:.6f}")
 
         # Validation
         print("Performing validation")
@@ -46,7 +46,6 @@ def train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader):
     # Load in best model if training finished
     if not early_stop:
         p.stopping_criterion.load_best_model(model)
-    
     
     # Test set evaluation
     test_metrics = test(model, p, test_loader)

@@ -27,13 +27,13 @@ if __name__ == "__main__":
     assert (len(data) == (len(train_data)+len(val_data)+len(test_data))), "Discrepency in data subset lenghts"
 
     # Data loaders
-    train_loader = DataLoader(train_data, batch_size=p.batch_size, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_data, batch_size=p.batch_size, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_data, batch_size=p.batch_size, shuffle=False, num_workers=4)
     test_loader = DataLoader(test_data, batch_size=p.batch_size, shuffle=False)
 
     # Optimizer and loss_fn 
-    optimizer = torch.optim.Adam(model.parameters(), lr=p.lr)
-    loss_fn = nn.BCEWithLogitsLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=p.lr, momentum=p.momentum)
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=data.pos_weight)
 
     # Train model
     train(model, optimizer, loss_fn, p, train_loader, val_loader, test_loader)
