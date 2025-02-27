@@ -12,7 +12,7 @@ class EarlyStopping:
         if self.best_score is None: # First call
             self.best_score = score
             self.best_model = copy.deepcopy(model.state_dict())
-        elif self.best_score - score >= self.min_delta: # New best
+        elif score - self.best_score > self.min_delta: # New best
             self.best_model = copy.deepcopy(model.state_dict())
             self.best_score = score
             self.counter = 0
