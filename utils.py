@@ -6,7 +6,8 @@ from model import UNet
 def numpy_to_input_tensor(numpy_frame, transform):
     """ numpy_frame [H,W,C] -> tensor [1,3,512,512] """
     numpy_frame = np.moveaxis(numpy_frame, -1, 0) # [C,H,W]
-    torch_frame = transform(torch.Tensor(numpy_frame[None]))
+    torch_frame = torch.Tensor(numpy_frame[None]) # [1,C,H,W]
+    torch_frame = transform(torch_frame)
     torch_frame = torch_frame.type(torch.float32) / 255.0 # [1,C,H,W]
     return torch_frame
 

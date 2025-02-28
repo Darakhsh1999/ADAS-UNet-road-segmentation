@@ -24,7 +24,7 @@ def predict(model_path, source_path, threshold=0.3, FPS=30, use_camera=False):
     with torch.no_grad():
         while cv2.waitKey(deley) != ord("q"):
 
-            success, frame = source.read() # load in next frame
+            success, frame = source.read() # load in next frame [H,W,C]
 
             if not success:
                 print("failed frame")
@@ -37,11 +37,10 @@ def predict(model_path, source_path, threshold=0.3, FPS=30, use_camera=False):
             x = F.sigmoid(x)
             x = 255*(x >= threshold).type(torch.uint8) # [1,1,512,512]
             
-            x_np = x.cpu().numpy().squeeze() # [H,W]
-            binary_mask = cv2.resize(x_np, (frame.shape[1],frame.shape[0]))
-            binary_mask_stack = np.stack((binary_mask, binary_mask, binary_mask))
-            binary_mask_stack = np.moveaxis(binary_mask_stack,0,-1)
-            binary_mask_stack[:,:,1:3] = 0
+            x_np = x.cpu().numpy().squeeze() # [512,512]
+            binary_mask = cv2.resize(x_np, (frame.shape[1],frame.shape[0])) # [H,W]
+            binary_mask_stack = np.stack((binary_mask, binary_mask, binary_mask), axis=-1) # [H,W,C]
+            binary_mask_stack[:,:,1:3] = 0 # set blue color
 
             combined_frame = cv2.addWeighted(frame,1.0,binary_mask_stack,0.5,0)
             cv2.imshow("root", combined_frame)
@@ -55,4 +54,4 @@ if __name__ == "__main__":
 
     model_path = os.path.join("models","unet996.pt")
     source_path = os.path.join("dataset","ScenicDrive_trim.mp4")
-    predict(model_path, source_path, threshold=0.2)
+    predict(model_path, source_path, threshold=0.5)
