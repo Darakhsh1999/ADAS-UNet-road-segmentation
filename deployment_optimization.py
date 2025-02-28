@@ -1,6 +1,7 @@
 """ TensorRT optimization of deployed model """
 # https://github.com/pytorch/TensorRT
 # https://pytorch.org/TensorRT/
+# https://pytorch.org/TensorRT/user_guide/using_dla.html
 
 import os
 import torch
@@ -9,12 +10,14 @@ import torch_tensorrt
 from utils import load_model
 
 def compile_to_tensorrt(model, input_example):
+    """ JIT tensorRT compilation """
     optimized_model = torch.compile(model, backend="tensorrt")
     optimized_model(input_example) # compiled on first run
     return optimized_model
 
-def export_to_tensorrt(model, model_path, input_example):
-    trt_gm = torch_tensorrt.compile(model, ir="dynamo", inputs=input_example)
+def export_to_tensorrt(model, model_path, input_example, compile_specs={}):
+    """ AOT tensorRT compilation and export """
+    trt_gm = torch_tensorrt.compile(model, kwarg_inputs=compile_specs, ir="dynamo", inputs=input_example)
     torch_tensorrt.save(trt_gm, model_path[:-2]+"ep", inputs=input_example) 
 
 def load_exported_tensorrt(compiled_model_path):
